@@ -1,0 +1,25 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    restart: unless-stopped
+    expose:
+      - '3000'
+    ports:
+      - '127.0.0.1:3000:3000'
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.umami.rule=Host(`ge-pf-track.grassecon.net`)
+      - traefik.http.routers.umami.tls=true
+      - traefik.http.routers.umami.tls.certresolver=le
+      - traefik.http.services.umami.loadbalancer.server.port=3000
+    env_file:
+      - .env
+    networks:
+      - traefik_ge
+
+networks:
+  traefik_ge:
+    external: true

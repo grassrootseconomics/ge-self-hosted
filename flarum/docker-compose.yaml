@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  flarum:
+    image: flarum:local
+    container_name: flarum
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8000:8000
+    volumes:
+      - './flarum-data:/data'
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.flarum.rule=Host(`community.grassecon.org`)
+      - traefik.http.routers.flarum.tls=true
+      - traefik.http.routers.flarum.tls.certresolver=le
+      - traefik.http.routers.flarum.tls.domains[0].main=community.grassecon.org
+      - traefik.http.services.flarum.loadbalancer.server.port=8000
+    env_file:
+      - .env 
+    networks:
+      - traefik_ge    
+     
+networks:
+  traefik_ge:
+    external: true
