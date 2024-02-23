@@ -1,1 +1,3 @@
 */*.env
+netbird/*.json
+netbird/*.conf

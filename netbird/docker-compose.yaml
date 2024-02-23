@@ -1,0 +1,71 @@
+version: "3"
+services:
+  dashboard:
+    image: netbirdio/dashboard:v2.1.1
+    restart: unless-stopped
+    ports:
+      - 80
+    env_file:
+      netbird.env
+    labels:
+      caddy: netbird.grassecon.net
+      caddy.reverse_proxy: "{{upstreams 80}}"
+    networks:
+      - ge      
+  signal:
+    image: netbirdio/signal:0.26.0
+    restart: unless-stopped
+    volumes:
+      - netbird-signal:/var/lib/netbird
+    ports:
+      - 80
+    networks:
+      - ge
+    labels:
+      caddy: netbird.grassecon.net
+      caddy.handle_path: /signalexchange.SignalExchange/*
+      caddy.handle_path.0_reverse_proxy: "{{upstreams h2c 80}}"         
+  management:
+    image: netbirdio/management:0.26.0
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+    volumes:
+      - netbird-mgmt:/var/lib/netbird
+      - ./management.json:/etc/netbird/management.json
+    ports:
+      - 443    
+    command: [
+      "--port", "443",
+      "--log-file", "console",
+      "--disable-anonymous-metrics=false",
+      "--single-account-mode-domain=netbird.grassecon.net",
+      "--dns-domain=netbird.selfhosted"
+      ]
+    labels:
+      caddy: netbird.grassecon.net
+      caddy.handle_path_0: /api/*
+      caddy.handle_path_0.0_reverse_proxy: "{{upstreams 443}}"
+      caddy.handle_path_1: /management.ManagementService/*
+      caddy.handle_path_1.0_reverse_proxy: "{{upstreams h2c 443}}"           
+    networks:
+      - ge      
+  coturn:
+    image: coturn/coturn:4.6
+    restart: unless-stopped
+    domainname: netbird.grassecon.net
+    volumes:
+      - ./turnserver.conf:/etc/turnserver.conf:ro
+    network_mode: host
+    command:
+      - -c /etc/turnserver.conf
+
+networks:
+  ge:
+    external: true
+
+volumes:
+  netbird-mgmt:
+    driver: local
+  netbird-signal:
+    driver: local
