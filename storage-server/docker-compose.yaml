@@ -1,0 +1,16 @@
+services:
+  gitea:
+    image: kamikazechaser/storage-server:latest
+    env_file: storage.env
+    expose:
+      - 5003
+    labels:
+      caddy: storage.sarafu.africa
+      caddy.reverse_proxy: "{{upstreams 5003}}"
+    restart: unless-stopped
+    networks:
+      - ge
+
+networks:
+  ge:
+    external: true
