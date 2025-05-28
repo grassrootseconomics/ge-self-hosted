@@ -1,0 +1,21 @@
+services:
+  uptime:
+    image: louislam/uptime-kuma:1
+    ports:
+      - 3001
+    volumes:
+      - uptime-kuma:/app/data
+    labels:
+      caddy: uptime.grassecon.net
+      caddy.reverse_proxy: "{{upstreams 3001}}"
+    restart: unless-stopped
+    networks:
+      - ge
+
+networks:
+  ge:
+    external: true
+
+volumes:
+  uptime-kuma:
+    driver: local
